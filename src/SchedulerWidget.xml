@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="clearis.schedulerwidget.SchedulerWidget" pluginWidget="true" needsEntityContext="true" offlineCapable="true"
+        supportedPlatform="Web"
+        xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Scheduler Widget</name>
+    <description>SchedulerWidget (react-big-scheduler-stch)</description>
+    <icon/>
+    <properties>
+        <propertyGroup caption="Context">
+            <propertyGroup caption="View">
+                <property key="VisibleDateStartDate" type="attribute">
+                    <caption>Context Start Date</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="VisibleDateEndDate" type="attribute">
+                    <caption>Context End Date</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="on_context_change" type="action">
+                    <caption>Update Context</caption>
+                    <description></description>
+
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Resources">
+            <propertyGroup caption="DataSource">
+                <property key="resource_datasource" type="datasource" isList="true">
+                    <caption>Resources</caption>
+                    <description/>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Resource Details">
+                <property key="resource_id_attribute" type="attribute" required="false"
+                          dataSource="resource_datasource">
+                    <caption>ID (if alt is used)</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                        <attributeType name="Integer"/>
+                        <attributeType name="Long"/>
+                        <attributeType name="AutoNumber"/>
+                    </attributeTypes>
+                </property>
+                <property key="resource_title_attribute" type="attribute" required="true"
+                          dataSource="resource_datasource">
+                    <caption>Title</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                    </attributeTypes>
+                </property>
+                <property key="resource_description_attribute" type="attribute" required="true"
+                          dataSource="resource_datasource">
+                    <caption>Description</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="DataSource">
+                <property key="event_datasource" type="datasource" isList="true">
+                    <caption>Events</caption>
+                    <description></description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Event Resource">
+                <property key="event_resource_id_attribute" type="attribute" required="false"
+                          dataSource="event_datasource">
+                    <caption>Resource ID (if alt is used)</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                        <attributeType name="Integer"/>
+                        <attributeType name="Long"/>
+                        <attributeType name="AutoNumber"/>
+                    </attributeTypes>
+                </property>
+                <property key="event_resource_id_association" type="association" selectableObjects="resource_datasource"
+                          required="false" dataSource="event_datasource">
+                    <caption>Resource Association</caption>
+                    <description></description>
+                    <associationTypes>
+                        <associationType name="Reference"/>
+                    </associationTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Event Details">
+                <property key="event_id_attribute" type="attribute" required="false" dataSource="event_datasource">
+                    <caption>Event ID (if alt is used)</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                        <attributeType name="Integer"/>
+                        <attributeType name="Long"/>
+                        <attributeType name="AutoNumber"/>
+                    </attributeTypes>
+                </property>
+
+                <property key="event_start_attribute" type="attribute" dataSource="event_datasource">
+                    <caption>Start</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="event_end_attribute" type="attribute" dataSource="event_datasource">
+                    <caption>End</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="event_name_attribute" type="attribute" dataSource="event_datasource">
+                    <caption>Name</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                    </attributeTypes>
+                </property>
+                <property key="event_description_attribute" type="textTemplate" dataSource="event_datasource" required="false">
+                    <caption>Description</caption>
+                    <description></description>
+
+                </property>
+
+            </propertyGroup>
+            <propertyGroup caption="Style">
+                <property key="event_class_attribute" type="textTemplate" dataSource="event_datasource" required="false">
+                    <caption>CSS Class</caption>
+                    <description></description>
+
+                </property>
+
+            </propertyGroup>
+
+            <propertyGroup caption="Dynamic Editability">
+                <property key="event_resizable_attribute" type="attribute" dataSource="event_datasource" required="false">
+                    <caption>Resizable (default false)</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="Boolean"/>
+                    </attributeTypes>
+                </property>
+                <property key="event_movable_attribute" type="attribute" dataSource="event_datasource" required="false">
+                    <caption>Movable (default false)</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="Boolean"/>
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+
+        </propertyGroup>
+        <propertyGroup caption="Actions">
+            <property key="event_onclick_action" type="action" dataSource="event_datasource">
+                <caption>Event On Click</caption>
+                <description></description>
+            </property>
+        </propertyGroup>
+    </properties>
+</widget>
