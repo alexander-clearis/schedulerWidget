@@ -18,7 +18,6 @@ export interface SchedulerWidgetContainerProps {
     resource_datasource: ListValue;
     resource_id_attribute?: ListAttributeValue<string | Big>;
     resource_title_attribute: ListAttributeValue<string>;
-    resource_description_attribute: ListAttributeValue<string>;
     event_datasource: ListValue;
     event_resource_id_attribute?: ListAttributeValue<string | Big>;
     event_resource_id_association?: ListReferenceValue;
@@ -28,8 +27,11 @@ export interface SchedulerWidgetContainerProps {
     event_name_attribute: ListAttributeValue<string>;
     event_description_attribute?: ListExpressionValue<string>;
     event_class_attribute?: ListExpressionValue<string>;
-    event_resizable_attribute?: ListAttributeValue<boolean>;
-    event_movable_attribute?: ListAttributeValue<boolean>;
+    event_can_change_time?: ListAttributeValue<boolean>;
+    event_can_change_resource?: ListAttributeValue<boolean>;
+    startAttribute: string;
+    endAttribute: string;
+    eventresourceIDAttribute: string;
     event_onclick_action?: ListActionValue;
 }
 
@@ -48,7 +50,6 @@ export interface SchedulerWidgetPreviewProps {
     resource_datasource: {} | { caption: string } | { type: string } | null;
     resource_id_attribute: string;
     resource_title_attribute: string;
-    resource_description_attribute: string;
     event_datasource: {} | { caption: string } | { type: string } | null;
     event_resource_id_attribute: string;
     event_resource_id_association: string;
@@ -58,7 +59,10 @@ export interface SchedulerWidgetPreviewProps {
     event_name_attribute: string;
     event_description_attribute: string;
     event_class_attribute: string;
-    event_resizable_attribute: string;
-    event_movable_attribute: string;
+    event_can_change_time: string;
+    event_can_change_resource: string;
+    startAttribute: string;
+    endAttribute: string;
+    eventresourceIDAttribute: string;
     event_onclick_action: {} | null;
 }

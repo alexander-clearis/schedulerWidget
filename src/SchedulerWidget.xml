@@ -23,10 +23,11 @@
                         <attributeType name="DateTime"/>
                     </attributeTypes>
                 </property>
+            </propertyGroup>
+            <propertyGroup caption="On Change">
                 <property key="on_context_change" type="action">
                     <caption>Update Context</caption>
                     <description></description>
-
                 </property>
             </propertyGroup>
         </propertyGroup>
@@ -57,14 +58,7 @@
                         <attributeType name="String"/>
                     </attributeTypes>
                 </property>
-                <property key="resource_description_attribute" type="attribute" required="true"
-                          dataSource="resource_datasource">
-                    <caption>Description</caption>
-                    <description></description>
-                    <attributeTypes>
-                        <attributeType name="String"/>
-                    </attributeTypes>
-                </property>
+
             </propertyGroup>
         </propertyGroup>
         <propertyGroup caption="Events">
@@ -114,7 +108,7 @@
                         <attributeType name="DateTime"/>
                     </attributeTypes>
                 </property>
-                <property key="event_end_attribute" type="attribute" dataSource="event_datasource">
+                <property key="event_end_attribute" type="attribute" dataSource="event_datasource" >
                     <caption>End</caption>
                     <description></description>
                     <attributeTypes>
@@ -145,19 +139,35 @@
             </propertyGroup>
 
             <propertyGroup caption="Dynamic Editability">
-                <property key="event_resizable_attribute" type="attribute" dataSource="event_datasource" required="false">
-                    <caption>Resizable (default false)</caption>
+                <property key="event_can_change_time" type="attribute" dataSource="event_datasource" required="false">
+                    <caption>Time is Editable (default false)</caption>
                     <description></description>
                     <attributeTypes>
                         <attributeType name="Boolean"/>
                     </attributeTypes>
                 </property>
-                <property key="event_movable_attribute" type="attribute" dataSource="event_datasource" required="false">
-                    <caption>Movable (default false)</caption>
+                <property key="event_can_change_resource" type="attribute" dataSource="event_datasource" required="false">
+                    <caption>Resource is Editable (default false)</caption>
                     <description></description>
                     <attributeTypes>
                         <attributeType name="Boolean"/>
                     </attributeTypes>
+                </property>
+            </propertyGroup>
+
+            <propertyGroup caption="Interaction MX8 CLIENT API">
+                <property key="startAttribute" type="string" required="true">
+                    <caption>String Start Attr</caption>
+                    <description></description>
+                </property>
+
+                <property key="endAttribute" type="string" required="true">
+                    <caption>String Start Attr</caption>
+                    <description></description>
+                </property>
+                <property key="eventresourceIDAttribute" type="string" required="true">
+                    <caption>String Resource Attribute</caption>
+                    <description></description>
                 </property>
             </propertyGroup>
 

@@ -26,12 +26,12 @@ export const defaultConfig: SchedulerDataConfig = {
     yearCellWidth: 80,
     customCellWidth: 80,
 
-    dayMaxEvents: 99,
-    weekMaxEvents: 99,
-    monthMaxEvents: 99,
-    quarterMaxEvents: 99,
-    yearMaxEvents: 99,
-    customMaxEvents: 99,
+    dayMaxEvents: 1000,
+    weekMaxEvents: 1000,
+    monthMaxEvents: 1000,
+    quarterMaxEvents: 1000,
+    yearMaxEvents: 1000,
+    customMaxEvents: 1000,
 
     eventItemPopoverTrigger: 'hover',
     eventItemPopoverPlacement: 'bottomLeft',
@@ -67,7 +67,7 @@ export const defaultConfig: SchedulerDataConfig = {
     displayWeekend: true,
     relativeMove: true,
     defaultExpanded: true,
-    dragAndDropEnabled: true,
+    dragAndDropEnabled: false,
 
     schedulerHeaderEventsFuncsTimeoutMs: 100,
 

@@ -1,17 +1,24 @@
-import {ListAttributeValue, ListExpressionValue, ListReferenceValue, ObjectItem} from "mendix";
-import {EventItem, Resource} from "react-big-scheduler-stch";
+import { ListAttributeValue, ListExpressionValue, ListReferenceValue, ObjectItem} from "mendix";
+
+import {DATE_FORMAT, EventItem, Resource} from "react-big-scheduler-stch";
 import {Big} from "big.js";
+import dayjs from "dayjs";
 
 
 export namespace Util {
     export type ID_Attribute_Type = ListAttributeValue<string | Big>;
 
     export interface ClearisEventType extends EventItem {
+        id: string
+        mxGuid: string
         description?: string;
         cssClass?: string
+        mxObj?: mendix.lib.MxObject
+        mxItem: ObjectItem
+
     }
 
-    export function createSchedulerResources(items: ObjectItem[], idAttribute: ID_Attribute_Type | undefined, titleAttribute: ListAttributeValue<string>, _discriptionAttribute: ListAttributeValue<string>): Resource[] {
+    export function createSchedulerResources(items: ObjectItem[], idAttribute: ID_Attribute_Type | undefined, titleAttribute: ListAttributeValue<string>): Resource[] {
         return items.map(objectItem => {
             return {
                 id: (idAttribute) ? idAttribute.get(objectItem).displayValue : objectItem.id,
@@ -32,8 +39,8 @@ export namespace Util {
         descriptionAttribute?: ListExpressionValue<string>,
         typeAttribute?: ListAttributeValue<string>,
         classAttribute?: ListExpressionValue<string>
-        resizableAttribute?: ListAttributeValue<boolean>
-        movableAttribute?: ListAttributeValue<boolean>
+        timeIsEditable?: ListAttributeValue<boolean>
+        resourceIsEditable?: ListAttributeValue<boolean>
     }
 
     export function createSchedulerEvents(items: ObjectItem[], attributes: eventAttributes): ClearisEventType[] {
@@ -52,16 +59,20 @@ export namespace Util {
         }
 
         return items.map(objectItem => {
+
+
             return {
                 id: (attributes.idAttribute) ? attributes.idAttribute.get(objectItem).displayValue : objectItem.id,
+                mxGuid: objectItem.id as string,
                 resourceId: getResourceId(objectItem),
-                start: attributes.startAttribute.get(objectItem).displayValue,
-                end: attributes.endAttribute.get(objectItem).displayValue,
+                start: dayjs(attributes.startAttribute.get(objectItem).value).format(DATE_FORMAT),
+                end: dayjs(attributes.endAttribute.get(objectItem).value).format(DATE_FORMAT),
                 title: attributes.titleAttribute.get(objectItem).displayValue,
                 description: attributes.descriptionAttribute?.get(objectItem).value ?? undefined,
                 cssClass: attributes.classAttribute?.get(objectItem).value ?? undefined,
-                resizable: attributes.resizableAttribute?.get(objectItem).value ?? true,
-                movable: attributes.movableAttribute?.get(objectItem).value ?? false
+                resizable: attributes.timeIsEditable?.get(objectItem).value ?? false,
+                movable: attributes.resourceIsEditable?.get(objectItem).value ?? false,
+                mxItem: objectItem
             } as ClearisEventType
         })
     }
