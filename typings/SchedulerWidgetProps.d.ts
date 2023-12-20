@@ -27,12 +27,15 @@ export interface SchedulerWidgetContainerProps {
     event_name_attribute: ListAttributeValue<string>;
     event_description_attribute?: ListExpressionValue<string>;
     event_class_attribute?: ListExpressionValue<string>;
+    event_image?: ListAttributeValue<string>;
     event_can_change_time?: ListAttributeValue<boolean>;
     event_can_change_resource?: ListAttributeValue<boolean>;
     startAttribute: string;
     endAttribute: string;
     eventresourceIDAttribute: string;
+    eventresourceAssociation: string;
     event_onclick_action?: ListActionValue;
+    resource_onclick_action?: ListActionValue;
 }
 
 export interface SchedulerWidgetPreviewProps {
@@ -59,10 +62,13 @@ export interface SchedulerWidgetPreviewProps {
     event_name_attribute: string;
     event_description_attribute: string;
     event_class_attribute: string;
+    event_image: string;
     event_can_change_time: string;
     event_can_change_resource: string;
     startAttribute: string;
     endAttribute: string;
     eventresourceIDAttribute: string;
+    eventresourceAssociation: string;
     event_onclick_action: {} | null;
+    resource_onclick_action: {} | null;
 }

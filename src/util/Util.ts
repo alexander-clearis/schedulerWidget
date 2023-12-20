@@ -15,7 +15,7 @@ export namespace Util {
         cssClass?: string
         mxObj?: mendix.lib.MxObject
         mxItem: ObjectItem
-
+        imageBase64?: string
     }
 
     export function createSchedulerResources(items: ObjectItem[], idAttribute: ID_Attribute_Type | undefined, titleAttribute: ListAttributeValue<string>): Resource[] {
@@ -24,10 +24,18 @@ export namespace Util {
                 id: (idAttribute) ? idAttribute.get(objectItem).displayValue : objectItem.id,
                 name: titleAttribute.get(objectItem).displayValue,
                 groupOnly: undefined,
-                parentId: undefined
-
+                parentId: undefined,
+                mxItem: objectItem
             }
-        })
+        }).sort(function (a, b) {
+            if (a.name < b.name) {
+                return -1;
+            }
+            if (a.name > b.name) {
+                return 1;
+            }
+            return 0;
+        });
     }
 
     export interface eventAttributes {
@@ -41,6 +49,7 @@ export namespace Util {
         classAttribute?: ListExpressionValue<string>
         timeIsEditable?: ListAttributeValue<boolean>
         resourceIsEditable?: ListAttributeValue<boolean>
+        imageAttribute?: ListAttributeValue<string>
     }
 
     export function createSchedulerEvents(items: ObjectItem[], attributes: eventAttributes): ClearisEventType[] {
@@ -60,7 +69,6 @@ export namespace Util {
 
         return items.map(objectItem => {
 
-
             return {
                 id: (attributes.idAttribute) ? attributes.idAttribute.get(objectItem).displayValue : objectItem.id,
                 mxGuid: objectItem.id as string,
@@ -72,7 +80,8 @@ export namespace Util {
                 cssClass: attributes.classAttribute?.get(objectItem).value ?? undefined,
                 resizable: attributes.timeIsEditable?.get(objectItem).value ?? false,
                 movable: attributes.resourceIsEditable?.get(objectItem).value ?? false,
-                mxItem: objectItem
+                mxItem: objectItem,
+                imageBase64: attributes.imageAttribute?.get(objectItem).value ?? undefined
             } as ClearisEventType
         })
     }

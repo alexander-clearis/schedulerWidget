@@ -133,7 +133,13 @@
                 <property key="event_class_attribute" type="textTemplate" dataSource="event_datasource" required="false">
                     <caption>CSS Class</caption>
                     <description></description>
-
+                </property>
+                <property key="event_image" type="attribute" required="false" dataSource="event_datasource">
+                    <caption>Image Base64</caption>
+                    <description></description>
+                    <attributeTypes>
+                        <attributeType name="String"/>
+                    </attributeTypes>
                 </property>
 
             </propertyGroup>
@@ -165,18 +171,28 @@
                     <caption>String Start Attr</caption>
                     <description></description>
                 </property>
-                <property key="eventresourceIDAttribute" type="string" required="true">
+                <property key="eventresourceIDAttribute" type="string" required="false">
                     <caption>String Resource Attribute</caption>
                     <description></description>
+                </property>
+                <property key="eventresourceAssociation" type="string" required="false">
+                    <caption>String Resource Assocation</caption>
+                    <description>Module/AssociationName</description>
                 </property>
             </propertyGroup>
 
         </propertyGroup>
         <propertyGroup caption="Actions">
             <property key="event_onclick_action" type="action" dataSource="event_datasource">
-                <caption>Event On Click</caption>
+                <caption>Event On Double Click</caption>
                 <description></description>
             </property>
+
+            <property key="resource_onclick_action" type="action" dataSource="resource_datasource">
+                <caption>Event On Double Click</caption>
+                <description></description>
+            </property>
+
         </propertyGroup>
     </properties>
 </widget>

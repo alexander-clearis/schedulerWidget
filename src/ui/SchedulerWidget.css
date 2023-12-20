@@ -4,3 +4,12 @@ Place your custom CSS here
 .widget-hello-world {
 
 }
+.date {
+    font-size: 20px;
+}
+
+table.scheduler-bg-table thead {
+    cursor: grab;
+    user-select: none;
+    border: 1px solid red;
+}
