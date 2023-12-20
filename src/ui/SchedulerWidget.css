@@ -8,8 +8,19 @@ Place your custom CSS here
     font-size: 20px;
 }
 
-table.scheduler-bg-table thead {
-    cursor: grab;
-    user-select: none;
-    border: 1px solid red;
+.resource-view {
+    resize: horizontal;
+    min-width: 200px;
+}
+
+.scheduler-view {
+    max-width: calc(100vw - 16px - 200px);
+    width: auto;
+}
+
+
+.RBS-Scheduler-root tbody tr td:nth-child(2) {
+    overflow: clip;
+    max-width: calc(100vw - 16px - 200px);
+
 }

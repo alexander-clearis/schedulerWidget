@@ -22,7 +22,7 @@ import classNames from "classnames";
 import MxObject = mendix.lib.MxObject;
 import dayjs, {Dayjs} from "dayjs";
 
-const resourceTableWidth = 200
+// const resourceTableWidth = 200
 
 export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { viewModel: SchedulerData }> {
     private _insertedRowStore: Element | null = null;
@@ -37,15 +37,18 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
             this._body.scrollLeft = x;
         }
     }
+    get_scroll = () => {
+        return this._thead!.scrollLeft
+    }
     private config: SchedulerDataConfig = {
         ...defaultConfig,
 
-        dayResourceTableWidth: resourceTableWidth,
-        weekResourceTableWidth: resourceTableWidth,
-        monthResourceTableWidth: resourceTableWidth,
-        quarterResourceTableWidth: resourceTableWidth,
-        yearResourceTableWidth: resourceTableWidth,
-        customResourceTableWidth: resourceTableWidth,
+        // dayResourceTableWidth: resourceTableWidth,
+        // weekResourceTableWidth: resourceTableWidth,
+        // monthResourceTableWidth: resourceTableWidth,
+        // quarterResourceTableWidth: resourceTableWidth,
+        // yearResourceTableWidth: resourceTableWidth,
+        customResourceTableWidth: "auto",
         tableHeaderHeight: 80,
 
 
@@ -55,7 +58,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         calendarPopoverEnabled: false,
         eventItemPopoverEnabled: false,
-        scrollToSpecialDaysjsEnabled: true,
+        // @ts-ignore
+        scrollToSpecialDayjsEnabled: false,
 
         viewChangeSpinEnabled: false,
         dateChangeSpinEnabled: false,
@@ -93,11 +97,11 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         let schedulerData =
 
-            new SchedulerData(dayjs(), ViewType.Custom, false, false, this.config, {
+            new SchedulerData(dayjs().startOf("month").format(DATE_FORMAT), ViewType.Custom, false, false, this.config, {
                 getCustomDateFunc: this.getCustomDate, getScrollSpecialDayjs: this.getScrollSpecialDayjs
             });
 
-        schedulerData.localeDayjs(dayjs()).locale("en")
+        schedulerData.localeDayjs(schedulerData.localeDayjs().startOf("month")).locale("en")
         this.state = {viewModel: schedulerData}
 
     }
@@ -383,14 +387,23 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         const mxobj = await this.resolve_mxObj(event);
 
+
         mxobj.set(this.props.eventresourceIDAttribute, slotId)
         if (this.props.eventresourceAssociation) {
             let resourceById = schedulerData.getResourceById(slotId) as any;
             mxobj.set(this.props.eventresourceAssociation, resourceById.mxItem.id)
         }
+
+        if(event.resizable) {
+            mxobj.set(this.props.startAttribute, dayjs(_start, DATE_FORMAT).startOf("day").unix() * 1000)
+            mxobj.set(this.props.endAttribute, dayjs(_end, DATE_FORMAT).endOf("day").unix() * 1000)
+        }
+        const old_scroll = this.get_scroll();
+
         mx.data.commit({
             mxobj: mxobj, callback: () => {
                 this.setState({viewModel: schedulerData}, () => {
+                    this.scroll(old_scroll)
 
                 });
 
@@ -409,13 +422,13 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         mxobj.set(this.props.startAttribute, dayjs(start, DATE_FORMAT).startOf("day").unix() * 1000)
 
+        const old_scroll = this.get_scroll();
 
         mx.data.commit({
             mxobj: mxobj, callback: () => {
 
                 this.setState({viewModel: schedulerData}, () => {
-
-                    console.log(schedulerData)
+                    this.scroll(old_scroll)
 
                 });
 
@@ -431,9 +444,13 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         const mxobj = await this.resolve_mxObj(event);
 
         mxobj.set(this.props.endAttribute, dayjs(newEnd, DATE_FORMAT).endOf("day").unix() * 1000)
+
+        const old_scroll = this.get_scroll();
+
         mx.data.commit({
             mxobj: mxobj, callback: () => {
                 this.setState({viewModel: schedulerData}, () => {
+                    this.scroll(old_scroll)
 
                 });
 
@@ -478,7 +495,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        sleep(1000).then(() => {
+        sleep(100).then(() => {
             if (_schedulerContent) {
                 _schedulerData.prev();
                 this.updateContextStartEnd(_schedulerData)
@@ -488,9 +505,19 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         })
     }
 
-    onScrollRight = (_schedulerData: SchedulerData, _schedulerContent: React.ReactNode, _maxScrollLeft: number) => {
+    onScrollRight = (_schedulerData: SchedulerData, _schedulerContent: React.ReactNode & Element, _maxScrollLeft: number) => {
 
+        function sleep(ms: number) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
+        sleep(100).then(() => {
+            if (_schedulerContent) {
+                _schedulerData.next();
+                this.updateContextStartEnd(_schedulerData)
+                this.scroll(_schedulerContent.scrollWidth - this._insertedRowStore!.lastElementChild!.clientWidth - _schedulerContent.clientWidth)
+            }
+        })
     }
 
     getCustomDate = (
@@ -530,6 +557,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
     getScrollSpecialDayjs = (_schedulerData: SchedulerData, _startDayjs: Dayjs, _endDays: Dayjs): Dayjs => {
         // @ts-ignore
-        return null;
+        return dayjs()
+        // return null;
+
     }
 }
