@@ -24,3 +24,10 @@ Place your custom CSS here
     max-width: calc(100vw - 16px - 200px);
 
 }
+
+.scheduler td div.resource-item {
+    height: 51px !important;
+}
+.scheduler td div.resource-item .resource-item__name {
+    text-align: left;
+}

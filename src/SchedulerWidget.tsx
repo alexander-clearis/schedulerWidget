@@ -1,4 +1,4 @@
-import React, {Component, createElement, CSSProperties, ReactNode} from "react";
+import {Component, createElement, CSSProperties, ReactNode} from "react";
 import {HTML5Backend} from 'react-dnd-html5-backend'
 import {DndProvider} from 'react-dnd'
 
@@ -7,7 +7,8 @@ import {SchedulerWidgetContainerProps} from "../typings/SchedulerWidgetProps";
 import "./ui/SchedulerWidget.css";
 import {
     CellUnit,
-    DATE_FORMAT, ResourceEvent,
+    DATE_FORMAT, DATETIME_FORMAT, Resource,
+    ResourceEvent,
     SchedulerData,
     SchedulerDataConfig,
     SchedulerProps,
@@ -16,19 +17,26 @@ import {
 } from "react-big-scheduler-stch";
 import ClearisSchedulerWrapper, {defaultConfig} from "./components/ClearisSchedulerWrapper";
 import {Util} from "./util/Util";
-import ClearisEventType = Util.ClearisEventType;
 import {ListReferenceValue} from "mendix";
 import classNames from "classnames";
-import MxObject = mendix.lib.MxObject;
 import dayjs, {Dayjs} from "dayjs";
+import ClearisEventType = Util.ClearisEventType;
+import MxObject = mendix.lib.MxObject;
 
 // const resourceTableWidth = 200
 
-export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { viewModel: SchedulerData }> {
+export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { viewModel: SchedulerData, viewChanged: number }> {
     private _insertedRowStore: Element | null = null;
     private _thead: Element | null = null;
     private _body: Element | null = null;
 
+    private scrollElement: Element | null = null;
+
+
+    scrollDebounce: boolean = true;
+
+    events: ClearisEventType[] = [];
+    resources: Resource[] = []
     scroll = (x: number) => {
         if (this._thead) {
             this._thead.scrollLeft = x
@@ -40,14 +48,11 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
     get_scroll = () => {
         return this._thead!.scrollLeft
     }
+
     private config: SchedulerDataConfig = {
         ...defaultConfig,
 
-        // dayResourceTableWidth: resourceTableWidth,
-        // weekResourceTableWidth: resourceTableWidth,
-        // monthResourceTableWidth: resourceTableWidth,
-        // quarterResourceTableWidth: resourceTableWidth,
-        // yearResourceTableWidth: resourceTableWidth,
+
         customResourceTableWidth: "auto",
         tableHeaderHeight: 80,
 
@@ -69,11 +74,11 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         dragAndDropEnabled: true,
         resourceName: "Resources",
+        checkConflict: false,
 
         views: [
             {viewName: 'Day', viewType: ViewType.Custom, showAgenda: false, isEventPerspective: false},
-            // {viewName: 'Quarter', viewType: ViewType.Quarter, showAgenda: false, isEventPerspective: false},
-            // {viewName: 'Year', viewType: ViewType.Year, showAgenda: false, isEventPerspective: false},
+
         ],
 
 
@@ -102,48 +107,59 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
             });
 
         schedulerData.localeDayjs(schedulerData.localeDayjs().startOf("month")).locale("en")
-        this.state = {viewModel: schedulerData}
+        this.state = {viewModel: schedulerData, viewChanged: 0}
 
     }
 
-    componentDidMount() {
-
-    }
 
     componentWillUnmount() {
     }
 
+    shouldComponentUpdate(nextProps: Readonly<SchedulerWidgetContainerProps>, nextState: Readonly<{ viewModel: SchedulerData, viewChanged: number, scrollLeftCounter: 0, scrollRightCounter: number }>): boolean {
+        let update = false;
+
+        if (this.props.event_datasource.items !== nextProps.event_datasource.items && nextProps.event_datasource.items != undefined) {
+
+            update = true
+
+            function idPropIsValid(id_unchecked: unknown): asserts id_unchecked is Util.ID_Attribute_Type | ListReferenceValue {
+                if (typeof id_unchecked === "undefined") throw new Error("ID attribute is invalid")
+            }
+
+            let resource_id_unchecked: Util.ID_Attribute_Type | ListReferenceValue | undefined = this.props.event_resource_id_attribute ?? this.props.event_resource_id_association;
+            idPropIsValid(resource_id_unchecked)
+            let resource_id_property: Util.ID_Attribute_Type | ListReferenceValue = resource_id_unchecked;
+
+            this.events = Util.createSchedulerEvents(
+                nextProps.event_datasource.items,
+                {
+                    idAttribute: this.props.event_id_attribute,
+                    resource_id_property: resource_id_property,
+                    titleAttribute: this.props.event_name_attribute,
+                    descriptionAttribute: this.props.event_description_attribute,
+                    startAttribute: this.props.event_start_attribute,
+                    endAttribute: this.props.event_end_attribute,
+                    classAttribute: this.props.event_class_attribute,
+                    timeIsEditable: this.props.event_can_change_time,
+                    resourceIsEditable: this.props.event_can_change_resource,
+                    imageAttribute: this.props.event_image
+                }
+            );
+        }
+
+        if (this.props.resource_datasource.items !== nextProps.resource_datasource.items && nextProps.resource_datasource.items != undefined) {
+            update = true
+            this.resources = Util.createSchedulerResources(nextProps.resource_datasource.items, this.props.resource_id_attribute, this.props.resource_title_attribute);
+        }
+
+        if (this.state.viewChanged != nextState.viewChanged) {
+            update = true;
+        }
+        return update
+    }
+
     componentDidUpdate(_prevProps: Readonly<SchedulerWidgetContainerProps>, _prevState: Readonly<{}>, _snapshot?: any) {
-        function idPropIsValid(id_unchecked: unknown): asserts id_unchecked is Util.ID_Attribute_Type | ListReferenceValue {
-            if (typeof id_unchecked === "undefined") throw new Error("ID attribute is invalid")
-        }
 
-        let resource_id_unchecked: Util.ID_Attribute_Type | ListReferenceValue | undefined = this.props.event_resource_id_attribute ?? this.props.event_resource_id_association;
-        idPropIsValid(resource_id_unchecked)
-        let resource_id_property: Util.ID_Attribute_Type | ListReferenceValue = resource_id_unchecked;
-
-        if (this.props.resource_datasource.items != undefined && this.props.resource_datasource.items.length > 0) {
-            this.schedulerData().setResources(Util.createSchedulerResources(this.props.resource_datasource.items, this.props.resource_id_attribute, this.props.resource_title_attribute))
-        }
-
-        if (this.props.event_datasource.items != undefined && this.props.event_datasource.items.length > 0) {
-            this.schedulerData().setEvents(Util.createSchedulerEvents(
-                    this.props.event_datasource.items,
-                    {
-                        idAttribute: this.props.event_id_attribute,
-                        resource_id_property: resource_id_property,
-                        titleAttribute: this.props.event_name_attribute,
-                        descriptionAttribute: this.props.event_description_attribute,
-                        startAttribute: this.props.event_start_attribute,
-                        endAttribute: this.props.event_end_attribute,
-                        classAttribute: this.props.event_class_attribute,
-                        timeIsEditable: this.props.event_can_change_time,
-                        resourceIsEditable: this.props.event_can_change_resource,
-                        imageAttribute: this.props.event_image
-                    }
-                )
-            )
-        }
     }
 
     render(): ReactNode {
@@ -151,7 +167,11 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
             this._insertedRowStore.innerHTML = '';
         }
 
-        return <div className={"flexFullWindow"} style={{flexGrow: 1, position: "relative"}}>
+        this.schedulerData().setEvents(this.events)
+        this.schedulerData().setResources(this.resources)
+
+
+        return <div className={"flexFullWindow"} id={this.props.name} style={{flexGrow: 1, position: "relative"}}>
             <DndProvider backend={HTML5Backend}>
                 <ClearisSchedulerWrapper {...this.getSchedulerProps()}/>
             </DndProvider>
@@ -171,9 +191,6 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
             updateEventEnd: this.updateEventEnd,
             moveEvent: this.moveEvent,
             slotItemTemplateResolver: this.slotTemplateResolver,
-            onScrollLeft: this.onScrollLeft,
-            onScrollRight: this.onScrollRight
-
 
         }
     }
@@ -186,27 +203,25 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
     }
 
     prevClick = (schedulerData: SchedulerData): void => {
+
         schedulerData.prev()
         this.updateContextStartEnd(schedulerData);
-        this.setState({viewModel: schedulerData})
+        this.setState({viewChanged: this.state.viewChanged + 1})
     }
 
     nextClick = (schedulerData: SchedulerData): void => {
         schedulerData.next();
         this.updateContextStartEnd(schedulerData)
-        this.setState({viewModel: schedulerData});
+        this.setState({viewChanged: this.state.viewChanged + 1})
     }
 
     onSelectDate = (_schedulerData: SchedulerData, _date: string): void => {
-        this.setState({
-            viewModel: _schedulerData
-        })
+
     }
 
     onViewChange = (schedulerData: SchedulerData, view: View): void => {
         schedulerData.setViewType(view.viewType, view.showAgenda, view.isEventPerspective);
         // this.updateContextStartEnd(schedulerData)
-        this.setState({viewModel: schedulerData});
     }
 
     slotTemplateResolver = (
@@ -359,7 +374,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
                     insertRow = thead!.childNodes[0] as HTMLElement
                     row.style.height = "60px"
                 }
-                ;
+
                 if (insertRow != this._insertedRowStore) {
 
                     this._insertedRowStore = insertRow
@@ -383,7 +398,6 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
     moveEvent = async (schedulerData: SchedulerData, event: ClearisEventType, slotId: string, slotName: string, _start: string, _end: string) => {
         let filter = ((schedulerData as any).events as Array<ClearisEventType>).filter(x => x.id === event.id)[0];
-        schedulerData.moveEvent(filter, slotId, slotName, event.start, event.end);
 
         const mxobj = await this.resolve_mxObj(event);
 
@@ -394,18 +408,24 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
             mxobj.set(this.props.eventresourceAssociation, resourceById.mxItem.id)
         }
 
-        if(event.resizable) {
-            mxobj.set(this.props.startAttribute, dayjs(_start, DATE_FORMAT).startOf("day").unix() * 1000)
-            mxobj.set(this.props.endAttribute, dayjs(_end, DATE_FORMAT).endOf("day").unix() * 1000)
+        const newStart = dayjs(_start, DATE_FORMAT).startOf("day")
+        const newEnd = dayjs(_end, DATE_FORMAT).endOf("day") ;
+        if (event.resizable) {
+            mxobj.set(this.props.startAttribute, newStart.unix() * 1000);
+            mxobj.set(this.props.endAttribute, newEnd.unix() * 1000);
         }
-        const old_scroll = this.get_scroll();
 
+        schedulerData.moveEvent(filter, slotId, slotName, (event.resizable) ? newStart.format(DATETIME_FORMAT) : event.start, (event.resizable) ? newEnd.format(DATETIME_FORMAT) : event.end);
+
+        this.setState({viewChanged: this.state.viewChanged + 1},
+
+            () => {
+                console.error("callback!")
+            }
+        )
         mx.data.commit({
             mxobj: mxobj, callback: () => {
-                this.setState({viewModel: schedulerData}, () => {
-                    this.scroll(old_scroll)
 
-                });
 
             }
         })
@@ -429,7 +449,6 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
                 this.setState({viewModel: schedulerData}, () => {
                     this.scroll(old_scroll)
-
                 });
 
             }
@@ -449,9 +468,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         mx.data.commit({
             mxobj: mxobj, callback: () => {
-                this.setState({viewModel: schedulerData}, () => {
+                this.setState({viewModel: schedulerData, viewChanged: 1 + this.state.viewChanged}, () => {
                     this.scroll(old_scroll)
-
                 });
 
             }
@@ -489,35 +507,86 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         this.props.resource_onclick_action?.get(_resource.mxItem).execute()
     }
 
-    onScrollLeft = (_schedulerData: SchedulerData, _schedulerContent: React.ReactNode & Element, _maxScrollLeft: number) => {
+    private mouse_is_up: boolean = true
+    private scrollPosition: number = 0
+    mouseUp_callback = () => this.mouse_is_up = true;
+    mouseDown_callback = () => this.mouse_is_up = false
+    mouseCallbackStore: any
+    private onScroll_callback = (_e: MouseEvent) => {
 
-        function sleep(ms: number) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+        if (this.scrollElement && this.scrollPosition != this.scrollElement.scrollLeft) {
+            this.scrollPosition = this.scrollElement.scrollLeft
+            // @ts-ignore
+            let execute_scroll: (e: Element) => void
+            const minscroll = 0
+            const maxscroll = this.scrollElement.scrollWidth - this.scrollElement.clientWidth - 1;
+
+            if (this.scrollElement.scrollLeft <= minscroll) {
+                execute_scroll = this.scrollLeft
+            } else if (this.scrollElement.scrollLeft >= maxscroll) {
+                execute_scroll = this.scrollRight
+            } else {
+                return;
+            }
+            if (this.mouse_is_up) {
+                execute_scroll(this.scrollElement)
+            } else {
+
+                this.mouseCallbackStore = () => {
+                    execute_scroll(this.scrollElement!);
+                    document.removeEventListener("mouseup", this.mouseCallbackStore)
+                }
+
+                document.addEventListener("mouseup", this.mouseCallbackStore)
+            }
         }
 
-        sleep(100).then(() => {
-            if (_schedulerContent) {
-                _schedulerData.prev();
-                this.updateContextStartEnd(_schedulerData)
+    };
 
-                this.scroll(this._insertedRowStore?.firstElementChild?.getBoundingClientRect().width ?? _schedulerContent.getBoundingClientRect().width)
-            }
-        })
+    componentDidMount() {
+        document.addEventListener("mouseup", this.mouseUp_callback)
+        document.addEventListener("mousedown", this.mouseDown_callback)
+        this.scrollElement = document.getElementById(this.props.name)!.querySelector(".scheduler-view")!.lastElementChild;
+        this.scrollElement?.addEventListener("scroll", this.onScroll_callback);
+
+
     }
 
-    onScrollRight = (_schedulerData: SchedulerData, _schedulerContent: React.ReactNode & Element, _maxScrollLeft: number) => {
 
-        function sleep(ms: number) {
+    scrollLeft = (_scrollElement: Element) => {
+        function wait(ms: number) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        sleep(100).then(() => {
-            if (_schedulerContent) {
-                _schedulerData.next();
-                this.updateContextStartEnd(_schedulerData)
-                this.scroll(_schedulerContent.scrollWidth - this._insertedRowStore!.lastElementChild!.clientWidth - _schedulerContent.clientWidth)
-            }
-        })
+        if (this.scrollDebounce) {
+            this.scrollDebounce = false;
+            wait(250).then(() => {
+                this.scrollDebounce = true;
+            })
+            this.schedulerData().prev();
+            this.updateContextStartEnd(this.schedulerData());
+            this.setState({viewChanged: this.state.viewChanged + 1}, () => {
+                this.scroll(this._insertedRowStore?.firstElementChild?.getBoundingClientRect().width!);
+            })
+        }
+    }
+
+    scrollRight = (_scrollElement: Element) => {
+        function wait(ms: number) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        if (this.scrollDebounce) {
+            this.scrollDebounce = false;
+            wait(250).then(() => {
+                this.scrollDebounce = true;
+            })
+            this.schedulerData().next();
+            this.updateContextStartEnd(this.schedulerData());
+            this.setState({viewChanged: this.state.viewChanged + 1}, () => {
+                this.scroll(_scrollElement.scrollWidth - this._insertedRowStore!.lastElementChild!.clientWidth - _scrollElement.clientWidth);
+            })
+        }
     }
 
     getCustomDate = (
