@@ -1,4 +1,4 @@
-import Scheduler, {SchedulerDataConfig, SummaryPos, ViewType} from "react-big-scheduler-stch";
+import Scheduler, {SchedulerDataConfig, SummaryPos} from "react-big-scheduler-stch";
 
 export const defaultConfig: SchedulerDataConfig = {
     schedulerWidth: '100%',
@@ -82,11 +82,7 @@ export const defaultConfig: SchedulerDataConfig = {
     minuteStep: 30,
 
     views: [
-        { viewName: 'Day', viewType: ViewType.Day, showAgenda: false, isEventPerspective: false },
-        { viewName: 'Week', viewType: ViewType.Week, showAgenda: false, isEventPerspective: false },
-        { viewName: 'Month', viewType: ViewType.Month, showAgenda: false, isEventPerspective: false },
-        { viewName: 'Quarter', viewType: ViewType.Quarter, showAgenda: false, isEventPerspective: false },
-        { viewName: 'Year', viewType: ViewType.Year, showAgenda: false, isEventPerspective: false },
+
     ],
 };
 

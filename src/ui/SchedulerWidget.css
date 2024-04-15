@@ -1,6 +1,8 @@
 /*
 Place your custom CSS here
 */
+
+@import "Planner.css";
 .widget-hello-world {
 
 }
@@ -30,4 +32,16 @@ Place your custom CSS here
 }
 .scheduler td div.resource-item .resource-item__name {
     text-align: left;
+}
+
+#RBS-Scheduler-root thead tr td div {
+    display: flex;
+    justify-content: flex-start;
+
+}
+
+.anticon.icon-nav {
+    line-height: 0 !important;
+    display: flex;
+    justify-content: center;
 }

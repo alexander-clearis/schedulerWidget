@@ -15,6 +15,7 @@ export interface SchedulerWidgetContainerProps {
     VisibleDateStartDate: EditableValue<Date>;
     VisibleDateEndDate: EditableValue<Date>;
     on_context_change?: ActionValue;
+    onChangeValidation: string;
     resource_datasource: ListValue;
     resource_id_attribute?: ListAttributeValue<string | Big>;
     resource_title_attribute: ListAttributeValue<string>;
@@ -50,6 +51,7 @@ export interface SchedulerWidgetPreviewProps {
     VisibleDateStartDate: string;
     VisibleDateEndDate: string;
     on_context_change: {} | null;
+    onChangeValidation: string;
     resource_datasource: {} | { caption: string } | { type: string } | null;
     resource_id_attribute: string;
     resource_title_attribute: string;

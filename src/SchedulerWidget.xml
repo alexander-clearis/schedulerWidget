@@ -29,6 +29,10 @@
                     <caption>Update Context</caption>
                     <description></description>
                 </property>
+                <property key="onChangeValidation" type="string">
+                    <caption>Validation Microflow (Module.MicroflowName)</caption>
+                    <description>Must return a boolean!</description>
+                </property>
             </propertyGroup>
         </propertyGroup>
         <propertyGroup caption="Resources">

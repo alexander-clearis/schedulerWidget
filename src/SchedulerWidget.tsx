@@ -25,7 +25,10 @@ import MxObject = mendix.lib.MxObject;
 
 // const resourceTableWidth = 200
 
-export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { viewModel: SchedulerData, viewChanged: number }> {
+export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
+    viewModel: SchedulerData,
+    viewChanged: number
+}> {
     private _insertedRowStore: Element | null = null;
     private _thead: Element | null = null;
     private _body: Element | null = null;
@@ -61,8 +64,9 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         eventItemLineHeight: 50,
         eventItemHeight: 50,
 
-        calendarPopoverEnabled: false,
+        calendarPopoverEnabled: true,
         eventItemPopoverEnabled: false,
+
         // @ts-ignore
         scrollToSpecialDayjsEnabled: false,
 
@@ -75,11 +79,6 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         dragAndDropEnabled: true,
         resourceName: "Resources",
         checkConflict: false,
-
-        views: [
-            {viewName: 'Day', viewType: ViewType.Custom, showAgenda: false, isEventPerspective: false},
-
-        ],
 
 
     };
@@ -106,6 +105,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
                 getCustomDateFunc: this.getCustomDate, getScrollSpecialDayjs: this.getScrollSpecialDayjs
             });
 
+
+        schedulerData.setViewType(ViewType.Custom, false, false)
         schedulerData.localeDayjs(schedulerData.localeDayjs().startOf("month")).locale("en")
         this.state = {viewModel: schedulerData, viewChanged: 0}
 
@@ -115,7 +116,12 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
     componentWillUnmount() {
     }
 
-    shouldComponentUpdate(nextProps: Readonly<SchedulerWidgetContainerProps>, nextState: Readonly<{ viewModel: SchedulerData, viewChanged: number, scrollLeftCounter: 0, scrollRightCounter: number }>): boolean {
+    shouldComponentUpdate(nextProps: Readonly<SchedulerWidgetContainerProps>, nextState: Readonly<{
+        viewModel: SchedulerData,
+        viewChanged: number,
+        scrollLeftCounter: 0,
+        scrollRightCounter: number
+    }>): boolean {
         let update = false;
 
         if (this.props.event_datasource.items !== nextProps.event_datasource.items && nextProps.event_datasource.items != undefined) {
@@ -215,8 +221,35 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         this.setState({viewChanged: this.state.viewChanged + 1})
     }
 
-    onSelectDate = (_schedulerData: SchedulerData, _date: string): void => {
+    onSelectDate = (_schedulerData: SchedulerData, date: string): void => {
+        this.schedulerData().setDate(date)
 
+        this.updateContextStartEnd(this.schedulerData())
+        this.setState({viewChanged: this.state.viewChanged + 1}, () => {
+            let key = dayjs(date).format("DD/MM/YYYY");
+
+            //scroll date into view!
+            this.scrollToDate(key);
+        })
+
+    }
+
+    private scrollToDate(date: string) {
+        if (this._insertedRowStore) {
+            let querySelector = this._insertedRowStore.nextElementSibling?.querySelector(`[date-index='${date}']`);
+            if (querySelector) {
+                let elementPosition = (querySelector as HTMLElement)?.offsetLeft;
+                let clientWidth = (this._body?.clientWidth ?? 0) / 2;
+
+
+                if (elementPosition != undefined && clientWidth != undefined) {
+                    this.scroll(elementPosition - clientWidth);
+
+                }
+            }
+
+
+        }
     }
 
     onViewChange = (schedulerData: SchedulerData, view: View): void => {
@@ -279,7 +312,10 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         </div>;
     }
 
-    private nonAgendaCellHeaderTemplateResolver = (schedulerData: SchedulerData, item: { time: string, nonWorkingTime: boolean }, _formattedDateItems: string[], style: CSSProperties) => {
+    private nonAgendaCellHeaderTemplateResolver = (schedulerData: SchedulerData, item: {
+        time: string,
+        nonWorkingTime: boolean
+    }, _formattedDateItems: string[], style: CSSProperties) => {
         let datetime = schedulerData.localeDayjs(item.time);
         let isCurrentDate = false;
 
@@ -297,8 +333,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         return [
 
             <th ref={(e) => {
+                e?.setAttribute("date-index", datetime.format("DD/MM/YYYY"))
                 if (datetime.date() == 1) {
-
                     this.pushRefToHeaderRefs(e, datetime)
                 }
             }
@@ -409,7 +445,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         }
 
         const newStart = dayjs(_start, DATE_FORMAT).startOf("day")
-        const newEnd = dayjs(_end, DATE_FORMAT).endOf("day") ;
+        const newEnd = dayjs(_end, DATE_FORMAT).endOf("day");
         if (event.resizable) {
             mxobj.set(this.props.startAttribute, newStart.unix() * 1000);
             mxobj.set(this.props.endAttribute, newEnd.unix() * 1000);
@@ -417,18 +453,19 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         schedulerData.moveEvent(filter, slotId, slotName, (event.resizable) ? newStart.format(DATETIME_FORMAT) : event.start, (event.resizable) ? newEnd.format(DATETIME_FORMAT) : event.end);
 
-        this.setState({viewChanged: this.state.viewChanged + 1},
-
-            () => {
-                console.error("callback!")
-            }
+        this.setState({viewChanged: this.state.viewChanged + 1}
         )
-        mx.data.commit({
-            mxobj: mxobj, callback: () => {
 
+        mx.data.action({
+            params: {
+                actionname: this.props.onChangeValidation,
+                guids: [mxobj.getGuid()],
+                applyto: "selection"
+            },
+            callback: () => {
 
             }
-        })
+        });
     }
 
     updateEventStart = async (schedulerData: SchedulerData, event: ClearisEventType, start: string) => {
@@ -444,15 +481,19 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         const old_scroll = this.get_scroll();
 
-        mx.data.commit({
-            mxobj: mxobj, callback: () => {
-
+        mx.data.action({
+            params: {
+                actionname: this.props.onChangeValidation,
+                guids: [mxobj.getGuid()],
+                applyto: "selection"
+            },
+            callback: () => {
                 this.setState({viewModel: schedulerData}, () => {
                     this.scroll(old_scroll)
                 });
-
             }
-        })
+        });
+
 
     }
     updateEventEnd = async (schedulerData: SchedulerData, event: ClearisEventType, newEnd: string) => {
@@ -466,14 +507,20 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
 
         const old_scroll = this.get_scroll();
 
-        mx.data.commit({
-            mxobj: mxobj, callback: () => {
+
+        mx.data.action({
+            params: {
+                actionname: this.props.onChangeValidation,
+                guids: [mxobj.getGuid()],
+                applyto: "selection"
+            },
+            callback: () => {
                 this.setState({viewModel: schedulerData, viewChanged: 1 + this.state.viewChanged}, () => {
                     this.scroll(old_scroll)
                 });
-
             }
-        })
+        });
+
 
     }
 
@@ -548,8 +595,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, { 
         document.addEventListener("mousedown", this.mouseDown_callback)
         this.scrollElement = document.getElementById(this.props.name)!.querySelector(".scheduler-view")!.lastElementChild;
         this.scrollElement?.addEventListener("scroll", this.onScroll_callback);
-
-
+        console.log("??")
+        this.scrollToDate("13/02/2024")
     }
 
 
