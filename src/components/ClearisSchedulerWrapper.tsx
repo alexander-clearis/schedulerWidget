@@ -1,7 +1,7 @@
 import Scheduler, {SchedulerDataConfig, SummaryPos} from "react-big-scheduler-stch";
 
 export const defaultConfig: SchedulerDataConfig = {
-    schedulerWidth: '100%',
+    schedulerWidth: '50%',
     besidesWidth: 20,
     schedulerMaxHeight: 0,
     tableHeaderHeight: 40,

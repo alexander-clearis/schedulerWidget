@@ -23,6 +23,17 @@
                         <attributeType name="DateTime"/>
                     </attributeTypes>
                 </property>
+                <property key="SuggestedViewDate" type="attribute">
+                    <caption>Suggested view date</caption>
+                    <description>Suggested date to set the view to.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="guid" type="string">
+                    <caption>GUID</caption>
+                    <description>Must be a unique GUID</description>
+                </property>
             </propertyGroup>
             <propertyGroup caption="On Change">
                 <property key="on_context_change" type="action">
@@ -193,7 +204,7 @@
             </property>
 
             <property key="resource_onclick_action" type="action" dataSource="resource_datasource">
-                <caption>Event On Double Click</caption>
+                <caption>Resource On Double Click</caption>
                 <description></description>
             </property>
 

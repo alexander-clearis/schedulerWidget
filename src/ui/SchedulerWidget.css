@@ -12,7 +12,7 @@ Place your custom CSS here
 
 .resource-view {
     resize: horizontal;
-    min-width: 200px;
+    min-width: 168px;
 }
 
 .scheduler-view {
@@ -29,6 +29,7 @@ Place your custom CSS here
 
 .scheduler td div.resource-item {
     height: 51px !important;
+    /*background: red;*/
 }
 .scheduler td div.resource-item .resource-item__name {
     text-align: left;
@@ -40,8 +41,21 @@ Place your custom CSS here
 
 }
 
+table.scheduler-bg-table tr td {
+    border-right: 1px solid #e9e9e9 !important;
+}
+
+
 .anticon.icon-nav {
     line-height: 0 !important;
     display: flex;
     justify-content: center;
+}
+
+.today_button {
+    border: 1px solid #3582d4;
+    border-radius: 4px;
+}
+.RBS-Scheduler-root {
+    margin-left: -6px;
 }

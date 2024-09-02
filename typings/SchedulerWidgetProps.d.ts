@@ -14,6 +14,8 @@ export interface SchedulerWidgetContainerProps {
     tabIndex?: number;
     VisibleDateStartDate: EditableValue<Date>;
     VisibleDateEndDate: EditableValue<Date>;
+    SuggestedViewDate: EditableValue<Date>;
+    guid: string;
     on_context_change?: ActionValue;
     onChangeValidation: string;
     resource_datasource: ListValue;
@@ -50,6 +52,8 @@ export interface SchedulerWidgetPreviewProps {
     readOnly: boolean;
     VisibleDateStartDate: string;
     VisibleDateEndDate: string;
+    SuggestedViewDate: string;
+    guid: string;
     on_context_change: {} | null;
     onChangeValidation: string;
     resource_datasource: {} | { caption: string } | { type: string } | null;

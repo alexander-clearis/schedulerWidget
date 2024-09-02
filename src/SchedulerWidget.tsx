@@ -35,11 +35,14 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
 
     private scrollElement: Element | null = null;
 
-
     scrollDebounce: boolean = true;
+    _scrollDate?: string;
 
     events: ClearisEventType[] = [];
     resources: Resource[] = []
+
+
+    //Scroll
     scroll = (x: number) => {
         if (this._thead) {
             this._thead.scrollLeft = x
@@ -52,6 +55,21 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         return this._thead!.scrollLeft
     }
 
+    private scrollToDate(date: string) {
+        if (this._insertedRowStore) {
+            let querySelector = this._insertedRowStore.nextElementSibling?.querySelector(`[date-index='${date}']`);
+            if (querySelector) {
+                let elementPosition = (querySelector as HTMLElement)?.offsetLeft;
+                let clientWidth = (this._body?.clientWidth ?? 0) / 2;
+                if (elementPosition != undefined && clientWidth != undefined) {
+                    this.scroll(elementPosition - clientWidth);
+                }
+            }
+        }
+    }
+
+
+    //Schedular config
     private config: SchedulerDataConfig = {
         ...defaultConfig,
 
@@ -79,12 +97,37 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         dragAndDropEnabled: true,
         resourceName: "Resources",
         checkConflict: false,
-
-
     };
 
     schedulerData(): SchedulerData {
         return this.state.viewModel;
+    }
+
+    getSchedulerProps(): SchedulerProps {
+
+
+        let rightCustomHeader = (
+            <div className={"btn mx-button mx-name-actionButton6 StartSearch btn-info"} onClick={() => {
+                const __d = this.schedulerData();
+                this.onSelectDate(__d, dayjs().format(DATE_FORMAT))
+
+            }}><span> Today </span></div>
+        );
+
+        return {
+            schedulerData: this.schedulerData(),
+            prevClick: this.prevClick,
+            nextClick: this.nextClick,
+            onSelectDate: this.onSelectDate,
+            onViewChange: this.onViewChange,
+            eventItemTemplateResolver: this.eventItemTemplateResolver,
+            nonAgendaCellHeaderTemplateResolver: this.nonAgendaCellHeaderTemplateResolver,
+            updateEventStart: this.updateEventStart,
+            updateEventEnd: this.updateEventEnd,
+            moveEvent: this.moveEvent,
+            slotItemTemplateResolver: this.slotTemplateResolver,
+            leftCustomHeader: rightCustomHeader,
+        }
     }
 
 
@@ -99,21 +142,50 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         this.updateEventStart.bind(this);
         this.updateEventEnd.bind(this);
 
+        let datejs = dayjs()
+        let localstore = this.getLocalstore();
+        if (localstore) {
+            this._scrollDate = localstore.scrollDate
+            datejs = dayjs(this._scrollDate, "DD/MM/YYYY")
+        } else {
+            this._scrollDate = datejs.format("DD/MM/YYYY")
+        }
+
         let schedulerData =
 
-            new SchedulerData(dayjs().startOf("month").format(DATE_FORMAT), ViewType.Custom, false, false, this.config, {
+            new SchedulerData(datejs.format(DATE_FORMAT), ViewType.Custom, false, false, this.config, {
                 getCustomDateFunc: this.getCustomDate, getScrollSpecialDayjs: this.getScrollSpecialDayjs
             });
 
+        schedulerData.setDate(datejs.format(DATE_FORMAT));
 
         schedulerData.setViewType(ViewType.Custom, false, false)
-        schedulerData.localeDayjs(schedulerData.localeDayjs().startOf("month")).locale("en")
+        schedulerData.localeDayjs(schedulerData.localeDayjs()).locale("en")
         this.state = {viewModel: schedulerData, viewChanged: 0}
 
     }
 
+    //Render
+    render(): ReactNode {
+        if (this._insertedRowStore) {
+            this._insertedRowStore.innerHTML = '';
+        }
+
+
+        this.schedulerData().setEvents(this.events)
+        this.schedulerData().setResources(this.resources)
+
+
+        return <div className={"flexFullWindow"} id={this.props.name} style={{flexGrow: 1, position: "relative"}}
+                    key={this.props.name}>
+            <DndProvider backend={HTML5Backend}>
+                <ClearisSchedulerWrapper {...this.getSchedulerProps()}/>
+            </DndProvider>
+        </div>;
+    }
 
     componentWillUnmount() {
+        this.syncLocalstore()
     }
 
     shouldComponentUpdate(nextProps: Readonly<SchedulerWidgetContainerProps>, nextState: Readonly<{
@@ -123,7 +195,6 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         scrollRightCounter: number
     }>): boolean {
         let update = false;
-
         if (this.props.event_datasource.items !== nextProps.event_datasource.items && nextProps.event_datasource.items != undefined) {
 
             update = true
@@ -158,6 +229,17 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
             this.resources = Util.createSchedulerResources(nextProps.resource_datasource.items, this.props.resource_id_attribute, this.props.resource_title_attribute);
         }
 
+        if (this.props.SuggestedViewDate.value?.getTime() !== nextProps.SuggestedViewDate.value?.getTime() && nextProps.SuggestedViewDate.value != undefined) {
+
+            if (this._scrollDate == undefined) {
+
+                this.onSelectDate(this.schedulerData(), dayjs(nextProps.SuggestedViewDate.value).format(DATE_FORMAT))
+            }
+
+
+            update = true;
+        }
+
         if (this.state.viewChanged != nextState.viewChanged) {
             update = true;
         }
@@ -165,49 +247,48 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
     }
 
     componentDidUpdate(_prevProps: Readonly<SchedulerWidgetContainerProps>, _prevState: Readonly<{}>, _snapshot?: any) {
+        const callback = () => {
+            if (this._scrollDate && this._thead) {
+                let querySelector = this._thead.querySelector(`th[date-index='${this._scrollDate}']`);
+                if (querySelector) {
+                    let elementPosition = (querySelector as HTMLElement)?.offsetLeft;
+                    if (elementPosition) {
+                        this.scroll(elementPosition)
+                    }
+                }
+                this._scrollDate = undefined;
+            } else {
 
-    }
-
-    render(): ReactNode {
-        if (this._insertedRowStore) {
-            this._insertedRowStore.innerHTML = '';
+            }
         }
-
-        this.schedulerData().setEvents(this.events)
-        this.schedulerData().setResources(this.resources)
-
-
-        return <div className={"flexFullWindow"} id={this.props.name} style={{flexGrow: 1, position: "relative"}}>
-            <DndProvider backend={HTML5Backend}>
-                <ClearisSchedulerWrapper {...this.getSchedulerProps()}/>
-            </DndProvider>
-        </div>;
+        setTimeout(callback, 100)
     }
 
-    getSchedulerProps(): SchedulerProps {
-        return {
-            schedulerData: this.schedulerData(),
-            prevClick: this.prevClick,
-            nextClick: this.nextClick,
-            onSelectDate: this.onSelectDate,
-            onViewChange: this.onViewChange,
-            eventItemTemplateResolver: this.eventItemTemplateResolver,
-            nonAgendaCellHeaderTemplateResolver: this.nonAgendaCellHeaderTemplateResolver,
-            updateEventStart: this.updateEventStart,
-            updateEventEnd: this.updateEventEnd,
-            moveEvent: this.moveEvent,
-            slotItemTemplateResolver: this.slotTemplateResolver,
-
+    // @ts-ignore
+    private getElementAtScrollStart(): { date: any; pos: number } | undefined {
+        const thead = this._thead;
+        let dateIndexes = thead?.querySelectorAll("th.dateHeader");
+        if (dateIndexes) {
+            let dateAndPos = Array.from(dateIndexes).map((d) => {
+                return {
+                    date: d.getAttribute("date-index"),
+                    pos: (d as HTMLElement).offsetLeft
+                }
+            })
+            return dateAndPos.find(v => v.pos >= this._thead!.scrollLeft - 40);
         }
     }
 
+
+    //Update context variable.
     private updateContextStartEnd(_schedulerData: SchedulerData) {
-
         this.props.VisibleDateStartDate.setValue(_schedulerData.getViewStartDate().toDate());
         this.props.VisibleDateEndDate.setValue(_schedulerData.getViewEndDate().toDate());
         this.props.on_context_change?.execute();
     }
 
+
+    //Callbacks
     prevClick = (schedulerData: SchedulerData): void => {
 
         schedulerData.prev()
@@ -222,41 +303,19 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
     }
 
     onSelectDate = (_schedulerData: SchedulerData, date: string): void => {
-        this.schedulerData().setDate(date)
+        this.schedulerData().setDate(date);
 
         this.updateContextStartEnd(this.schedulerData())
         this.setState({viewChanged: this.state.viewChanged + 1}, () => {
             let key = dayjs(date).format("DD/MM/YYYY");
-
             //scroll date into view!
             this.scrollToDate(key);
         })
-
-    }
-
-    private scrollToDate(date: string) {
-        if (this._insertedRowStore) {
-            let querySelector = this._insertedRowStore.nextElementSibling?.querySelector(`[date-index='${date}']`);
-            if (querySelector) {
-                let elementPosition = (querySelector as HTMLElement)?.offsetLeft;
-                let clientWidth = (this._body?.clientWidth ?? 0) / 2;
-
-
-                if (elementPosition != undefined && clientWidth != undefined) {
-                    this.scroll(elementPosition - clientWidth);
-
-                }
-            }
-
-
-        }
     }
 
     onViewChange = (schedulerData: SchedulerData, view: View): void => {
         schedulerData.setViewType(view.viewType, view.showAgenda, view.isEventPerspective);
-        // this.updateContextStartEnd(schedulerData)
     }
-
     slotTemplateResolver = (
         _schedulerData: SchedulerData,
         _slot: ResourceEvent, _slotClickedFunc: (schedulerData: SchedulerData, slot: ResourceEvent) => void,
@@ -275,15 +334,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
             </div>
         </div>
     }
-    eventItemTemplateResolver = (
-        _schedulerData: SchedulerData,
-        event: ClearisEventType,
-        _bgColor: string,
-        _isStart: boolean,
-        _isEnd: boolean,
-        mustAddCssClass: string,
-        mustBeHeight: number,
-        agendaMaxEventWidth: number) => {
+    eventItemTemplateResolver = (_schedulerData: SchedulerData, event: ClearisEventType, _bgColor: string, _isStart: boolean, _isEnd: boolean, mustAddCssClass: string, mustBeHeight: number, agendaMaxEventWidth: number) => {
 
 
         let forcedStyle = {height: mustBeHeight};
@@ -316,6 +367,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         time: string,
         nonWorkingTime: boolean
     }, _formattedDateItems: string[], style: CSSProperties) => {
+
         let datetime = schedulerData.localeDayjs(item.time);
         let isCurrentDate = false;
 
@@ -388,6 +440,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
 
                 document.removeEventListener('mousemove', mouseMoveHandler);
                 document.removeEventListener('mouseup', mouseUpHandler);
+
             };
             ele.addEventListener('mousedown', mouseDownHandler);
         }
@@ -556,8 +609,13 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
 
     private mouse_is_up: boolean = true
     private scrollPosition: number = 0
-    mouseUp_callback = () => this.mouse_is_up = true;
-    mouseDown_callback = () => this.mouse_is_up = false
+    mouseUp_callback = () => {
+        this.mouse_is_up = true;
+    }
+    mouseDown_callback = () => {
+
+        this.mouse_is_up = false
+    }
     mouseCallbackStore: any
     private onScroll_callback = (_e: MouseEvent) => {
 
@@ -578,25 +636,22 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
             if (this.mouse_is_up) {
                 execute_scroll(this.scrollElement)
             } else {
-
                 this.mouseCallbackStore = () => {
                     execute_scroll(this.scrollElement!);
-                    document.removeEventListener("mouseup", this.mouseCallbackStore)
                 }
 
-                document.addEventListener("mouseup", this.mouseCallbackStore)
+                document.addEventListener("mouseup", this.mouseCallbackStore, {once: true})
             }
         }
 
     };
 
     componentDidMount() {
-        document.addEventListener("mouseup", this.mouseUp_callback)
-        document.addEventListener("mousedown", this.mouseDown_callback)
+        document.addEventListener("mouseup", this.mouseUp_callback, true)
+        document.addEventListener("mousedown", this.mouseDown_callback, true)
         this.scrollElement = document.getElementById(this.props.name)!.querySelector(".scheduler-view")!.lastElementChild;
         this.scrollElement?.addEventListener("scroll", this.onScroll_callback);
-        console.log("??")
-        this.scrollToDate("13/02/2024")
+
     }
 
 
@@ -673,8 +728,30 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
 
     getScrollSpecialDayjs = (_schedulerData: SchedulerData, _startDayjs: Dayjs, _endDays: Dayjs): Dayjs => {
         // @ts-ignore
-        return dayjs()
+
+        return datejs
         // return null;
 
     }
+
+
+    getLocalstore(): localStorageObject | undefined {
+        let item = sessionStorage.getItem(this.props.guid);
+        if (item) {
+            return JSON.parse(item) as localStorageObject;
+        }
+    }
+
+    syncLocalstore() {
+        let elementAtScrollStart = this.getElementAtScrollStart();
+        const store: localStorageObject = {
+            scrollDate: elementAtScrollStart?.date,
+        }
+        sessionStorage.setItem(this.props.guid, JSON.stringify(store))
+    }
 }
+
+interface localStorageObject {
+    scrollDate?: string;
+}
+
