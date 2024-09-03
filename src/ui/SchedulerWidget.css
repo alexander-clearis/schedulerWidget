@@ -16,7 +16,7 @@ Place your custom CSS here
 }
 
 .scheduler-view {
-    max-width: calc(100vw - 16px - 200px);
+    max-width: calc(100vw - 16px - 250px);
     width: auto;
 }
 
