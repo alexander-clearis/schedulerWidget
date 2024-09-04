@@ -26,12 +26,12 @@ export const defaultConfig: SchedulerDataConfig = {
     yearCellWidth: 80,
     customCellWidth: 80,
 
-    dayMaxEvents: 2000,
-    weekMaxEvents: 2000,
-    monthMaxEvents: 2000,
-    quarterMaxEvents: 2000,
-    yearMaxEvents: 2000,
-    customMaxEvents: 2000,
+    dayMaxEvents: 3000,
+    weekMaxEvents: 3000,
+    monthMaxEvents: 3000,
+    quarterMaxEvents: 3000,
+    yearMaxEvents: 3000,
+    customMaxEvents: 3000,
 
     eventItemPopoverTrigger: 'hover',
     eventItemPopoverPlacement: 'bottomLeft',
