@@ -72,12 +72,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
     //Schedular config
     private config: SchedulerDataConfig = {
         ...defaultConfig,
-
-
         customResourceTableWidth: "auto",
         tableHeaderHeight: 80,
-
-
         schedulerContentHeight: "calc(100%- 130px)",
         eventItemLineHeight: 50,
         eventItemHeight: 50,
@@ -97,6 +93,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         dragAndDropEnabled: true,
         resourceName: "Resources",
         checkConflict: false,
+
+        defaultExpanded: true
     };
 
     schedulerData(): SchedulerData {
@@ -172,6 +170,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         }
 
 
+
         this.schedulerData().setEvents(this.events)
         this.schedulerData().setResources(this.resources)
 
@@ -207,6 +206,8 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
             idPropIsValid(resource_id_unchecked)
             let resource_id_property: Util.ID_Attribute_Type | ListReferenceValue = resource_id_unchecked;
 
+
+            //https://github.com/StephenChou1017/react-big-scheduler#setevents:~:text=Used%20to%20set%20the%20events.%20the%20event%20array%20should%20be%20sorted%20in%20ascending%20order%20by%20event.start%20property
             this.events = Util.createSchedulerEvents(
                 nextProps.event_datasource.items,
                 {
@@ -221,7 +222,14 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
                     resourceIsEditable: this.props.event_can_change_resource,
                     imageAttribute: this.props.event_image
                 }
-            );
+            ).sort((a, b) => {
+                if (a.start === b.start) {
+                    return 0;
+                }
+                if (dayjs(a.start, "YYYY-MM-DD").unix() < dayjs(b.start, "YYYY-MM-DD").unix()) {
+                    return -1;
+                } else return 1
+            });
         }
 
         if (this.props.resource_datasource.items !== nextProps.resource_datasource.items && nextProps.resource_datasource.items != undefined) {
@@ -343,7 +351,7 @@ export class SchedulerWidget extends Component<SchedulerWidgetContainerProps, {
         }
 
 
-        return <div key={event.id}
+        return <div key={event.id} data-id={event.id}
                     className={classNames(mustAddCssClass, event.cssClass)} style={forcedStyle}
                     onDoubleClick={() => {
                         this.eventItemClick(_schedulerData, event)

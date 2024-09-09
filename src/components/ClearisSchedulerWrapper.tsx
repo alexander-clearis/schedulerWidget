@@ -84,6 +84,7 @@ export const defaultConfig: SchedulerDataConfig = {
     views: [
 
     ],
+
 };
 
 
